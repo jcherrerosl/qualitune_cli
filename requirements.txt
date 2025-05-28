@@ -1,0 +1,6 @@
+yt-dlp
+librosa
+numpy
+pandas
+pyloudnorm
+scipy
