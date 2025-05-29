@@ -51,8 +51,15 @@ def process_csv(input_csv, output_csv):
                 print(f"❌ ERROR en {url}: {e}")
 
     df = pd.DataFrame(output_data)
-    df.to_csv(output_csv, index=False)
-    print(f"\n📁 Features guardados en: {output_csv}")
+
+    # Si el archivo ya existe, hacemos append
+    if os.path.exists(output_csv):
+        df.to_csv(output_csv, mode='a', header=False, index=False)
+    else:
+        df.to_csv(output_csv, index=False)
+
+    print(f"\n📁 Features añadidos a: {output_csv}")
+
 
 if __name__ == "__main__":
     process_csv(INPUT_CSV, OUTPUT_CSV)
