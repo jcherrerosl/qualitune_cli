@@ -1365,7 +1365,8 @@ lufs,rms,crest_factor,bass_energy,mid_energy,high_energy,clipping_ratio,url
 -14.66,0.173467,5.7,21.027391,4.559194,1.526809,0.0,https://www.youtube.com/watch?v=bx1U4sQwpYY
 -19.11,0.105916,8.64,12.374386,2.138378,0.510577,0.0,https://www.youtube.com/watch?v=3Ck9FbYvc_o
 -17.44,0.129634,6.66,18.790709,3.87534,0.440292,0.0,https://www.youtube.com/watch?v=nQxxq5WKhfg
--12.2,0.245644,4.35,41.666862,5.289496,0.797918,2.4e-05,https://www.youtube.com/watch?v=wVR2gw8QZOE-11.32,0.252071,4.51,30.667852,7.585913,1.32081,0.000174,https://www.youtube.com/watch?v=UmKu_XFgTUA
+-12.2,0.245644,4.35,41.666862,5.289496,0.797918,2.4e-05,https://www.youtube.com/watch?v=wVR2gw8QZOE
+-11.32,0.252071,4.51,30.667852,7.585913,1.32081,0.000174,https://www.youtube.com/watch?v=UmKu_XFgTUA
 -12.59,0.202409,5.36,34.945107,5.692918,0.773596,1.7e-05,https://www.youtube.com/watch?v=EpTgryswsZQ
 -11.47,0.2436,4.56,34.362198,8.502233,1.031182,2.3e-05,https://www.youtube.com/watch?v=DDdQJmXOyKs
 -13.1,0.216782,4.99,45.409145,4.984136,0.822772,2.1e-05,https://www.youtube.com/watch?v=5CWuriZ70XA
