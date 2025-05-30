@@ -22,7 +22,7 @@ def get_playlist_urls(playlist_url):
     ydl_opts = {'quiet': True, 'extract_flat': True, 'force_generic_extractor': True}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(playlist_url, download=False)
-        return [entry['url'] for entry in info.get('entries', [])]
+        return [f"https://www.youtube.com/watch?v={entry['id']}" for entry in info.get('entries', [])]
 
 def download_audio_mp3(url, out_dir):
     ydl_opts = {
