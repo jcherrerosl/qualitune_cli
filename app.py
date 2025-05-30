@@ -2,23 +2,38 @@ import streamlit as st
 import pandas as pd
 import tempfile
 from yt_dlp import YoutubeDL
+from urllib.parse import urlparse, parse_qs
 from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
 
+# --- 🧼 Sanitizar URL ---
+def sanitize_youtube_url(input_url):
+    parsed = urlparse(input_url)
+    query = parse_qs(parsed.query)
+
+    if 'list' in query:
+        playlist_id = query['list'][0]
+        return f"https://www.youtube.com/playlist?list={playlist_id}"
+    else:
+        return input_url
+
+# --- 🎛️ Configuración de la app ---
 st.set_page_config(page_title="Qualitune Demo", layout="centered")
 st.title("Qualitune - demo")
 st.caption("Análisis técnico automatizado para filtrado editorial")
 
-# Input de usuario
+# --- 📝 Input del usuario ---
 input_url = st.text_input("Introduce una URL de YouTube (playlist o canción):", "")
 
 if input_url:
+    input_url = sanitize_youtube_url(input_url)  # 👈 aplicar limpieza
+
     with st.spinner("Analizando playlist..."):
         try:
-            # Extraer URLs
+            # --- 🎧 Extraer URLs ---
             ydl_opts = {
                 'quiet': True,
-                'extract_flat': False,  # ← False para obtener detalles completos
-                'noplaylist': False,    # ← Asegura que analiza toda la playlist
+                'extract_flat': False,  # ← Necesario para obtener metadatos completos
+                'noplaylist': False,    # ← Asegura que procesa toda la playlist
             }
 
             urls = []
@@ -33,9 +48,7 @@ if input_url:
                     st.success("Canción individual detectada")
                     urls.append(info['webpage_url'])
 
-
-
-            # Cargar estadísticas de referencia
+            # --- 📊 Cargar stats de referencia ---
             stats = load_reference_stats()
             results = []
 
@@ -52,6 +65,7 @@ if input_url:
                             "url": url
                         })
                     except Exception as e:
+                        st.warning(f"⚠️ Saltando: {url}\nMotivo: {str(e)}")
                         results.append({
                             "title": "ERROR",
                             "rating": 0,
@@ -59,12 +73,12 @@ if input_url:
                             "url": url
                         })
 
-            # Mostrar resultados
+            # --- 🧾 Mostrar resultados ---
             df = pd.DataFrame(results)
             st.subheader("📊 Resultados")
             st.dataframe(df[["title", "rating", "issues"]], use_container_width=True)
 
-            # Exportar CSV
+            # --- 📥 Botón para descargar CSV ---
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="📥 Descargar resultados en CSV",
