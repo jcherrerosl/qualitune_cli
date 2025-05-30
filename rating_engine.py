@@ -18,8 +18,11 @@ def load_reference_stats(reference_csv="reference_dataset.csv"):
     return stats
 
 def download_audio_mp3(url, out_dir):
+    ffmpeg_path = os.path.abspath("bin/ffmpeg")
+
     ydl_opts = {
         'format': 'bestaudio/best',
+        'ffmpeg_location': ffmpeg_path,
         'outtmpl': os.path.join(out_dir, '%(id)s.%(ext)s'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
