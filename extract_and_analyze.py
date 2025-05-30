@@ -10,7 +10,10 @@ INPUT_CSV = "songs.csv"
 OUTPUT_CSV = "reference_dataset.csv"
 
 def download_audio_mp3(url, out_dir):
+    ffmpeg_path = os.path.abspath("bin/ffmpeg")
+
     ydl_opts = {
+        'ffmpeg_location': ffmpeg_path,  # usa la ruta local
         'format': 'bestaudio/best',
         'outtmpl': os.path.join(out_dir, '%(id)s.%(ext)s'),
         'postprocessors': [{
@@ -18,7 +21,7 @@ def download_audio_mp3(url, out_dir):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'quiet': False  # ← activamos logs para ver qué pasa
+        'quiet': False  # para ver los logs
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -30,6 +33,7 @@ def download_audio_mp3(url, out_dir):
         raise FileNotFoundError(f"No se generó el archivo MP3 para {url}")
 
     return output_path
+
 
 def process_csv(input_csv, output_csv):
     output_data = []

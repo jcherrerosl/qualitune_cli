@@ -33,8 +33,11 @@ def get_playlist_urls(playlist_url):
         return [entry['url'] for entry in info.get('entries', [])]
 
 def download_audio_mp3(url, out_dir):
+    ffmpeg_path = os.path.abspath("bin/ffmpeg")  # ← ruta local al binario
+
     ydl_opts = {
         'format': 'bestaudio/best',
+        'ffmpeg_location': ffmpeg_path,  # ← clave para usar el binario embebido
         'outtmpl': os.path.join(out_dir, '%(id)s.%(ext)s'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
@@ -43,11 +46,13 @@ def download_audio_mp3(url, out_dir):
         }],
         'quiet': True
     }
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         video_id = info.get("id")
         title = info.get("title", "Unknown")
         return os.path.join(out_dir, f"{video_id}.mp3"), title
+
 
 def compute_rating_and_issues(features, stats):
     z_scores = {k: abs(v - stats[k]["mean"]) / stats[k]["std"]
