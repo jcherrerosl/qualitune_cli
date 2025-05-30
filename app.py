@@ -1,59 +1,75 @@
-import os
-import tempfile
-from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
+import streamlit as st
 import pandas as pd
+import tempfile
 from yt_dlp import YoutubeDL
+from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
 
-def get_urls_from_youtube(input_url):
-    ydl_opts = {
-        'quiet': True,
-        'extract_flat': True,
-        'force_generic_extractor': True,
-    }
+st.set_page_config(page_title="Qualitune Demo", layout="centered")
+st.title("🎧 Qualitune Demo")
+st.caption("Análisis técnico automatizado para filtrado editorial")
 
-    urls = []
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(input_url, download=False)
+# Input de usuario
+input_url = st.text_input("Introduce una URL de YouTube (playlist o canción):", "")
 
-        if '_type' in info and info['_type'] == 'playlist':
-            print(f"\n🎧 Playlist detectada: '{info.get('title', 'Sin título')}' ({len(info['entries'])} pistas)")
-            for entry in info['entries']:
-                urls.append(entry['url'] if 'url' in entry else f"https://www.youtube.com/watch?v={entry['id']}")
-        else:
-            print("\n🎵 Canción individual detectada")
-            urls.append(info['webpage_url'])
+if input_url:
+    with st.spinner("Analizando playlist..."):
+        try:
+            # Extraer URLs
+            ydl_opts = {
+                'quiet': True,
+                'extract_flat': True,
+                'force_generic_extractor': True,
+            }
 
-    return urls
+            urls = []
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(input_url, download=False)
 
-if __name__ == "__main__":
-    input_url = input("🔗 Introduce una URL de YouTube (playlist o canción): ").strip()
-    urls = get_urls_from_youtube(input_url)
-    stats = load_reference_stats()
+                if '_type' in info and info['_type'] == 'playlist':
+                    st.success(f"Playlist detectada: {info.get('title', 'Sin título')} ({len(info['entries'])} pistas)")
+                    for entry in info['entries']:
+                        urls.append(entry['url'] if 'url' in entry else f"https://www.youtube.com/watch?v={entry['id']}")
+                else:
+                    st.success("Canción individual detectada")
+                    urls.append(info['webpage_url'])
 
-    results = []
+            # Cargar estadísticas de referencia
+            stats = load_reference_stats()
+            results = []
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        for i, url in enumerate(urls):
-            print(f"🔄 ({i+1}/{len(urls)}) Analizando {url}")
-            try:
-                mp3_path, title = download_audio_mp3(url, tmpdir)
-                features, rating, issues = analyze_and_rate(mp3_path, stats)
-                results.append({
-                    "title": title,
-                    "rating": rating,
-                    "issues": ", ".join(issues),
-                    "url": url
-                })
-            except Exception as e:
-                print(f"❌ Error con {url}: {e}")
-                results.append({
-                    "title": "ERROR",
-                    "rating": 0,
-                    "issues": str(e),
-                    "url": url
-                })
+            with tempfile.TemporaryDirectory() as tmpdir:
+                for i, url in enumerate(urls):
+                    st.write(f"🔄 ({i+1}/{len(urls)}) Analizando {url}")
+                    try:
+                        mp3_path, title = download_audio_mp3(url, tmpdir)
+                        features, rating, issues = analyze_and_rate(mp3_path, stats)
+                        results.append({
+                            "title": title,
+                            "rating": rating,
+                            "issues": ", ".join(issues),
+                            "url": url
+                        })
+                    except Exception as e:
+                        results.append({
+                            "title": "ERROR",
+                            "rating": 0,
+                            "issues": str(e),
+                            "url": url
+                        })
 
-    df = pd.DataFrame(results)
-    df.to_csv("results.csv", index=False)
-    print("\n✅ Resultados guardados en 'results.csv'")
-    print(df[["title", "rating", "issues"]])
+            # Mostrar resultados
+            df = pd.DataFrame(results)
+            st.subheader("📊 Resultados")
+            st.dataframe(df[["title", "rating", "issues"]], use_container_width=True)
+
+            # Exportar CSV
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Descargar resultados en CSV",
+                data=csv,
+                file_name="results.csv",
+                mime="text/csv"
+            )
+
+        except Exception as e:
+            st.error(f"❌ Error al analizar: {e}")
