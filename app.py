@@ -5,7 +5,6 @@ from yt_dlp import YoutubeDL
 from urllib.parse import urlparse, parse_qs
 from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
 
-# --- 🧼 Sanitizar URL ---
 def sanitize_youtube_url(input_url):
     parsed = urlparse(input_url)
     query = parse_qs(parsed.query)
@@ -16,12 +15,12 @@ def sanitize_youtube_url(input_url):
     else:
         return input_url
 
-# --- 🎛️ Configuración de la app ---
+# --- Configuración de la app ---
 st.set_page_config(page_title="Qualitune Demo", layout="centered")
 st.title("Qualitune - demo")
 st.caption("Análisis técnico automatizado para filtrado editorial")
 
-# --- 📝 Input del usuario ---
+# --- Input del usuario ---
 input_url = st.text_input("Introduce una URL de YouTube (playlist o canción):", "")
 
 if input_url:
