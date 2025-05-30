@@ -45,12 +45,12 @@ def download_audio_mp3(url, out_dir):
 
 st.set_page_config(page_title="Qualitune", layout="centered")
 
-st.title("🎧 Qualitune")
+st.title("Qualitune")
 st.markdown("Análisis técnico automático de calidad sonora para filtrado editorial.")
 
-option = st.radio("¿Qué quieres analizar?", ["🎵 Canción de YouTube", "📂 Archivo local"])
+option = st.radio("¿Qué quieres analizar?", ["Canción de YouTube", "Archivo local"])
 
-if option == "🎵 Canción de YouTube":
+if option == "Canción de YouTube":
     url = st.text_input("Pega aquí el enlace de YouTube")
     if st.button("Analizar"):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -62,7 +62,7 @@ if option == "🎵 Canción de YouTube":
                     rating, issues = compute_rating_and_issues(features, stats)
 
                     st.success(f"✅ {title}")
-                    st.metric("🧠 Rating técnico", f"{rating} / 5")
+                    st.metric("Rating técnico", f"{rating} / 5")
                     st.write("### Problemas detectados:")
                     st.write(issues if issues else "✓ Ninguno")
                     st.write("### Detalles del análisis:")
@@ -71,7 +71,7 @@ if option == "🎵 Canción de YouTube":
                 except Exception as e:
                     st.error(f"❌ Error al analizar: {e}")
 
-elif option == "📂 Archivo local":
+elif option == "Archivo local":
     uploaded_file = st.file_uploader("Sube un archivo MP3", type="mp3")
     if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmpfile:
@@ -86,7 +86,7 @@ elif option == "📂 Archivo local":
                     rating, issues = compute_rating_and_issues(features, stats)
 
                     st.success(f"✅ {uploaded_file.name}")
-                    st.metric("🧠 Rating técnico", f"{rating} / 5")
+                    st.metric("Rating técnico", f"{rating} / 5")
                     st.write("### Problemas detectados:")
                     st.write(issues if issues else "✓ Ninguno")
                     st.write("### Detalles del análisis:")
