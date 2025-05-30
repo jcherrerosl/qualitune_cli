@@ -31,8 +31,10 @@ if input_url:
             # --- 🎧 Extraer URLs ---
             ydl_opts = {
                 'quiet': True,
-                'extract_flat': False,
-                'noplaylist': False,
+                'extract_flat': True,  # <- NO intenta obtener metadatos completos
+                'noplaylist': False,   # <- Procesa la playlist completa
+                'ignoreerrors': True,  # <- Ignora errores de vídeos individuales
+                'skip_download': True, # <- No intenta reproducir o analizar directamente
             }
 
             urls = []
