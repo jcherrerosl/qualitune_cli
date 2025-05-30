@@ -1,28 +1,21 @@
-import pandas as pd
-import numpy as np
 import os
 import yt_dlp
+import numpy as np
+import pandas as pd
 from analyze_song import analyze_song
 
-REFERENCE_CSV = "reference_dataset.csv"
 Z_THRESHOLD = 1.5
 
-def load_reference_stats():
-    df = pd.read_csv(REFERENCE_CSV)
+def load_reference_stats(reference_csv="reference_dataset.csv"):
+    df = pd.read_csv(reference_csv)
     stats = {}
     for col in df.columns:
-        if col not in ["url", "title"]:
+        if col != "url":
             stats[col] = {
                 "mean": df[col].mean(),
-                "std": df[col].std()
+                "std": df[col].std() if df[col].std() != 0 else 1  # evitar división por 0
             }
     return stats
-
-def get_playlist_urls(playlist_url):
-    ydl_opts = {'quiet': True, 'extract_flat': True, 'force_generic_extractor': True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(playlist_url, download=False)
-        return [f"https://www.youtube.com/watch?v={entry['id']}" for entry in info.get('entries', [])]
 
 def download_audio_mp3(url, out_dir):
     ydl_opts = {
@@ -39,21 +32,21 @@ def download_audio_mp3(url, out_dir):
         info = ydl.extract_info(url, download=True)
         video_id = info.get("id")
         title = info.get("title", "Unknown")
-        return os.path.join(out_dir, f"{video_id}.mp3"), title
+        mp3_path = os.path.join(out_dir, f"{video_id}.mp3")
+        if not os.path.exists(mp3_path):
+            raise Exception("No se generó el archivo de audio.")
+        return mp3_path, title
 
-def analyze_and_rate(features, stats):
+def analyze_and_rate(mp3_path, stats):
+    features = analyze_song(mp3_path)
     z_scores = {}
-    for metric, value in features.items():
-        if metric not in stats:
-            continue
-        mean = stats[metric]["mean"]
-        std = stats[metric]["std"]
-        if std == 0:
-            continue
-        z = abs(value - mean) / std
-        z_scores[metric] = z
+
+    for k, v in features.items():
+        if k in stats and stats[k]["std"] != 0:
+            z_scores[k] = abs(v - stats[k]["mean"]) / stats[k]["std"]
 
     avg_z = np.mean(list(z_scores.values())) if z_scores else 0
-    rating = max(1, 5 - avg_z)
+    rating = round(max(1, 5 - avg_z), 2)
     issues = [k for k, z in z_scores.items() if z > Z_THRESHOLD]
-    return round(rating, 2), issues
+
+    return features, rating, issues
