@@ -5,7 +5,7 @@ from yt_dlp import YoutubeDL
 from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
 
 st.set_page_config(page_title="Qualitune Demo", layout="centered")
-st.title("🎧 Qualitune Demo")
+st.title("Qualitune Demo")
 st.caption("Análisis técnico automatizado para filtrado editorial")
 
 # Input de usuario
