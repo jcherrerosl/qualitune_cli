@@ -24,15 +24,15 @@ st.caption("Análisis técnico automatizado para filtrado editorial")
 input_url = st.text_input("Introduce una URL de YouTube (playlist o canción):", "")
 
 if input_url:
-    input_url = sanitize_youtube_url(input_url)  # 👈 aplicar limpieza
+    input_url = sanitize_youtube_url(input_url)
 
     with st.spinner("Analizando playlist..."):
         try:
             # --- 🎧 Extraer URLs ---
             ydl_opts = {
                 'quiet': True,
-                'extract_flat': False,  # ← Necesario para obtener metadatos completos
-                'noplaylist': False,    # ← Asegura que procesa toda la playlist
+                'extract_flat': False,
+                'noplaylist': False,
             }
 
             urls = []
@@ -66,9 +66,9 @@ if input_url:
                     except Exception as e:
                         st.warning(f"⚠️ Saltando: {url}\nMotivo: {str(e)}")
                         results.append({
-                            "title": "ERROR",
+                            "title": "No se puede analizar",
                             "rating": 0,
-                            "issues": str(e),
+                            "issues": "No reproducible o extraíble",
                             "url": url
                         })
 
