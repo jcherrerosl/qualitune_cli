@@ -26,8 +26,6 @@ input_url = st.text_input("Introduce una URL de YouTube (playlist o canción):",
 if input_url:
     input_url = sanitize_youtube_url(input_url)  # 👈 aplicar limpieza
 
-    st.caption(f"🧠 URL analizada: {input_url}")
-
     with st.spinner("Analizando playlist..."):
         try:
             # --- 🎧 Extraer URLs ---
