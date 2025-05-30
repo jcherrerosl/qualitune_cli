@@ -17,8 +17,8 @@ if input_url:
             # Extraer URLs
             ydl_opts = {
                 'quiet': True,
-                'extract_flat': True,
-                'force_generic_extractor': True,
+                'extract_flat': False,  # ← False para obtener detalles completos
+                'noplaylist': False,    # ← Asegura que analiza toda la playlist
             }
 
             urls = []
@@ -28,10 +28,12 @@ if input_url:
                 if '_type' in info and info['_type'] == 'playlist':
                     st.success(f"Playlist detectada: {info.get('title', 'Sin título')} ({len(info['entries'])} pistas)")
                     for entry in info['entries']:
-                        urls.append(entry['url'] if 'url' in entry else f"https://www.youtube.com/watch?v={entry['id']}")
+                        urls.append(f"https://www.youtube.com/watch?v={entry['id']}")
                 else:
                     st.success("Canción individual detectada")
                     urls.append(info['webpage_url'])
+
+
 
             # Cargar estadísticas de referencia
             stats = load_reference_stats()
