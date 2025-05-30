@@ -1,95 +1,59 @@
-
 import streamlit as st
+import pandas as pd
 import tempfile
 import os
-import pandas as pd
-import numpy as np
+import uuid
+from rating_engine import get_playlist_urls, download_audio_mp3, load_reference_stats, analyze_and_rate
 from analyze_song import analyze_song
-import yt_dlp
 
 REFERENCE_CSV = "reference_dataset.csv"
-Z_THRESHOLD = 1.5
 
-def load_reference_stats():
-    df = pd.read_csv(REFERENCE_CSV)
-    stats = {}
-    for col in df.columns:
-        if col != "url":
-            stats[col] = {"mean": df[col].mean(), "std": df[col].std()}
-    return stats
+st.set_page_config(page_title="Qualitune", layout="wide")
 
-def compute_rating_and_issues(features, stats):
-    z_scores = {k: abs(v - stats[k]["mean"]) / stats[k]["std"]
-                for k, v in features.items() if k in stats and stats[k]["std"] != 0}
-    avg_z = np.mean(list(z_scores.values())) if z_scores else 0
-    rating = max(1, 5 - avg_z)
-    issues = [k for k, z in z_scores.items() if z > Z_THRESHOLD]
-    return round(rating, 2), issues
+st.title("🎧 Qualitune")
+st.markdown("""
+Análisis técnico automático de calidad sonora para filtrado editorial.  
+Introduce una **playlist de YouTube** y obtén un análisis técnico de cada canción.  
+""")
 
-def download_audio_mp3(url, out_dir):
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': os.path.join(out_dir, '%(id)s.%(ext)s'),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'quiet': True
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        video_id = info.get("id")
-        title = info.get("title", "Unknown")
-        return os.path.join(out_dir, f"{video_id}.mp3"), title
+playlist_url = st.text_input("🔗 URL de la playlist de YouTube", "")
 
-st.set_page_config(page_title="Qualitune", layout="centered")
+if playlist_url:
+    if st.button("🚀 Analizar Playlist"):
+        with st.spinner("Descargando y analizando canciones..."):
+            urls = get_playlist_urls(playlist_url)
+            stats = load_reference_stats()
+            results = []
+            tempdir = tempfile.TemporaryDirectory()
 
-st.title("Qualitune")
-st.markdown("Análisis técnico automático de calidad sonora para filtrado editorial.")
-
-option = st.radio("¿Qué quieres analizar?", ["Canción de YouTube", "Archivo local"])
-
-if option == "Canción de YouTube":
-    url = st.text_input("Pega aquí el enlace de YouTube")
-    if st.button("Analizar"):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with st.spinner("Descargando y analizando..."):
+            for idx, url in enumerate(urls, 1):
+                st.write(f"🔄 ({idx}/{len(urls)}) Analizando: {url}")
                 try:
-                    mp3_path, title = download_audio_mp3(url, tmpdir)
-                    stats = load_reference_stats()
+                    mp3_path, title = download_audio_mp3(url, tempdir.name)
                     features = analyze_song(mp3_path)
-                    rating, issues = compute_rating_and_issues(features, stats)
-
-                    st.success(f"✅ {title}")
-                    st.metric("Rating técnico", f"{rating} / 5")
-                    st.write("### Problemas detectados:")
-                    st.write(issues if issues else "✓ Ninguno")
-                    st.write("### Detalles del análisis:")
-                    st.json(features)
-
+                    rating, issues = analyze_and_rate(features, stats)
+                    results.append({
+                        "title": title,
+                        "rating": rating,
+                        "issues": ", ".join(issues) if issues else "✓ OK",
+                        "source": url
+                    })
                 except Exception as e:
-                    st.error(f"❌ Error al analizar: {e}")
+                    results.append({
+                        "title": "ERROR",
+                        "rating": 0,
+                        "issues": str(e),
+                        "source": url
+                    })
 
-elif option == "Archivo local":
-    uploaded_file = st.file_uploader("Sube un archivo MP3", type="mp3")
-    if uploaded_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmpfile:
-            tmpfile.write(uploaded_file.read())
-            tmpfile_path = tmpfile.name
+            df = pd.DataFrame(results)
+            st.success("✅ Análisis completado")
+            st.dataframe(df)
 
-        if st.button("Analizar"):
-            with st.spinner("Analizando archivo..."):
-                try:
-                    stats = load_reference_stats()
-                    features = analyze_song(tmpfile_path)
-                    rating, issues = compute_rating_and_issues(features, stats)
+            csv_filename = f"qualitune_results_{uuid.uuid4().hex[:6]}.csv"
+            df.to_csv(csv_filename, index=False)
+            with open(csv_filename, "rb") as f:
+                st.download_button("📥 Descargar CSV", data=f, file_name=csv_filename, mime="text/csv")
 
-                    st.success(f"✅ {uploaded_file.name}")
-                    st.metric("Rating técnico", f"{rating} / 5")
-                    st.write("### Problemas detectados:")
-                    st.write(issues if issues else "✓ Ninguno")
-                    st.write("### Detalles del análisis:")
-                    st.json(features)
-                except Exception as e:
-                    st.error(f"❌ Error al analizar: {e}")
+            tempdir.cleanup()
+            os.remove(csv_filename)
