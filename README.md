@@ -1,1 +1,2 @@
 # qualitune_cli
+# HackathonQualitune
