@@ -13,11 +13,11 @@ def extract_urls_from_youtube(input_url):
         info = ydl.extract_info(input_url, download=False)
 
         if '_type' in info and info['_type'] == 'playlist':
-            print(f"🎧 Playlist detectada: {info.get('title', 'Sin título')} ({len(info['entries'])} vídeos)")
+            print(f"Playlist detected: {info.get('title', 'Untitled')} ({len(info['entries'])} videos)")
             for entry in info['entries']:
                 urls.append(f"https://www.youtube.com/watch?v={entry['id']}")
         else:
-            print("🎵 Canción suelta detectada")
+            print("Single song detected")
             urls.append(info['webpage_url'])
 
     return urls
@@ -28,9 +28,9 @@ def save_urls_to_csv(urls, filename="songs.csv"):
         writer.writerow(['url'])
         for url in urls:
             writer.writerow([url])
-    print(f"✅ CSV guardado como {filename}")
+    print(f"CSV saved as {filename}")
 
 if __name__ == "__main__":
-    input_url = input("🔗 Introduce una URL de YouTube (playlist o canción): ").strip()
+    input_url = input("Enter a YouTube URL (playlist or song): ").strip()
     urls = extract_urls_from_youtube(input_url)
     save_urls_to_csv(urls)

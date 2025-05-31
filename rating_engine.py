@@ -13,7 +13,7 @@ def load_reference_stats(reference_csv="reference_dataset.csv"):
         if col != "url":
             stats[col] = {
                 "mean": df[col].mean(),
-                "std": df[col].std() if df[col].std() != 0 else 1  # evitar división por 0
+                "std": df[col].std() if df[col].std() != 0 else 1
             }
     return stats
 
@@ -37,7 +37,7 @@ def download_audio_mp3(url, out_dir):
         title = info.get("title", "Unknown")
         mp3_path = os.path.join(out_dir, f"{video_id}.mp3")
         if not os.path.exists(mp3_path):
-            raise Exception("No se generó el archivo de audio.")
+            raise Exception("Audio file was not generated.")
         return mp3_path, title
 
 def analyze_and_rate(mp3_path, stats):
