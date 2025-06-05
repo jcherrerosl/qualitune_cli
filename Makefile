@@ -1,10 +1,5 @@
 .PHONY: audit feed rate run
 
-audit:
-	@echo "Separating good songs and outliers..."
-	@python detect_and_export_outliers.py
-	@echo "Process completed. Dataset ready for next batch."
-
 feed:
 	@python generate_csv_from_playlist.py
 	@echo "Generating CSV from the playlist..."
