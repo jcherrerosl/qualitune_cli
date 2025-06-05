@@ -1,19 +1,26 @@
-.PHONY: audit feed rate
+.PHONY: audit feed rate run
 
-# Separa canciones buenas y outliers, y limpia el CSV de entrada
 audit:
-	@echo "🔍 Separando canciones limpias y outliers..."
+	@echo "Separating good songs and outliers..."
 	@python detect_and_export_outliers.py
-	@echo "✅ Proceso completado. Dataset listo para siguiente batch."
+	@echo "Process completed. Dataset ready for next batch."
 
-# Extrae MP3s y analiza canciones desde songs.csv
 feed:
-	python generate_csv_from_playlist.py
-	@echo "🎧 Generando CSV desde la playlist..."
-	@echo "🎧 Extrayendo y analizando canciones desde songs.csv..."
+	@python generate_csv_from_playlist.py
+	@echo "Generating CSV from the playlist..."
+	@echo "Extracting and analyzing songs from songs.csv..."
 	@python extract_and_analyze.py
-	@echo "✅ Canciones procesadas y añadidas a reference_dataset.csv."
+	@echo "Songs processed and added to reference_dataset.csv."
 
-# Analiza una canción individual y la registra en rated_songs.csv
 rate:
 	@python rating_engine.py
+
+run:
+	@echo "Launching Qualitune..."
+	@streamlit run app.py
+
+venv:
+	@echo "Creating virtual environment..."
+	@python3.9 -m venv venv
+	@echo "Activating virtual environment..."
+	@source venv/bin/activate
