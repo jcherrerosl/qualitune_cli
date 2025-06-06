@@ -19,3 +19,9 @@ venv:
 	@python3.9 -m venv venv
 	@echo "Activating virtual environment..."
 	@source venv/bin/activate
+
+commit:
+	@git add .
+	@./commit.sh
+	@INPUT_VAR=$$(cat input.txt) && git commit -m "$(shell date +"%Y-%m-%d %H:%M:%S"):  $$INPUT_VAR" && rm -f input.txt
+	@git push
