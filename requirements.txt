@@ -5,3 +5,4 @@ pandas
 pyloudnorm
 scipy
 spleeter
+streamlit

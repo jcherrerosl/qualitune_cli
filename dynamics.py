@@ -2,9 +2,8 @@ import librosa
 import numpy as np
 import pyloudnorm as pyln
 
-def analyze_dynamics(filepath):
+def analyze_dynamics(y, sr):
     try:
-        y, sr = librosa.load(filepath, sr=44100, mono=True)
         meter = pyln.Meter(sr)
         loudness = meter.integrated_loudness(y)
         rms_total = np.mean(librosa.feature.rms(y=y))
@@ -20,4 +19,4 @@ def analyze_dynamics(filepath):
         }
 
     except Exception as e:
-        raise RuntimeError(f"Error analyzing {filepath}: {e}")
+        raise RuntimeError(f"Error analyzing dynamics: {e}")

@@ -2,18 +2,44 @@ from spleeter.separator import Separator
 import librosa
 import numpy as np
 import librosa.display
+import soundfile as sf
+import tempfile
+import os
 
-def separate_audio(filepath):
-    separator = Separator('spleeter:2stems')
+def separate_audio(y, sr):
+    try:
+        # Baja a 22050 Hz
+        y_resampled = librosa.resample(y, orig_sr=sr, target_sr=22050)
 
-    y, sr = librosa.load(filepath, sr=44100, mono=True)
-    y = np.stack([y, y], axis=1)  # Convert to stereo by duplicating the mono signal
+        # Archivo temporal .wav
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpfile:
+            temp_path = tmpfile.name
+            sf.write(temp_path, y_resampled, 22050)
 
-    prediction = separator.separate(y)
-    
-    vocals = prediction['vocals']
-    vocals_mono = np.mean(vocals, axis=1)
-    return vocals_mono, sr
+        output_dir = os.path.dirname(temp_path)
+        separator = Separator('spleeter:2stems')
+        separator.separate_to_file(temp_path, output_dir)
+
+        vocal_path = os.path.join(
+            output_dir,
+            os.path.splitext(os.path.basename(temp_path))[0],
+            'vocals.wav'
+        )
+
+        vocals, _ = librosa.load(vocal_path, sr=22050)
+
+        # Limpieza
+        os.remove(temp_path)
+        os.remove(vocal_path)
+        os.rmdir(os.path.dirname(vocal_path))
+
+        return vocals, 22050
+
+    except Exception as e:
+        print(f"[ERROR] Error al separar audio: {e}")
+        return None, sr
+
+
 
 def check_tune(vocals_mono, sr):
     

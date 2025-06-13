@@ -3,7 +3,8 @@ import pandas as pd
 import tempfile
 from yt_dlp import YoutubeDL
 from urllib.parse import urlparse, parse_qs
-from rating_engine import load_reference_stats, download_audio_mp3, analyze_and_rate
+from extract_and_analyze import download_audio_mp3
+from rating_engine import rate_song
 import os
 
 def sanitize_youtube_url(input_url):
@@ -60,7 +61,6 @@ if input_url:
                 st.success("Single song detected")
                 urls.append(info['webpage_url'])
 
-            stats = load_reference_stats()
             results = []
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -68,11 +68,11 @@ if input_url:
                     st.write(f"Analyzing {url} ({i+1}/{len(urls)})")
                     try:
                         mp3_path, title = download_audio_mp3(url, tmpdir)
-                        result = analyze_and_rate(mp3_path, stats)
+                        result = rate_song(mp3_path)
                         results.append({
                             "title": title,
-                            "rating": result["rating"],
-                            "issues": ", ".join(result["issues"]),
+                            "rating": result["score"],
+                            "issues": ", ".join(result["details"]) if result.get("details") else "Unknown",
                             "url": url
                         })
                     except Exception as e:

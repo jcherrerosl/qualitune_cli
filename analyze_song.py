@@ -1,37 +1,59 @@
 from frequencies import analyze_bands
 from dynamics import analyze_dynamics
-from noise import analyze_noise
+from noise import calculate_noise_ratio
 from tuning import separate_audio, check_tune
 import librosa
 import numpy as np
 
-def analyze_song(filepath):
-    # Cargar el audio completo para noise
-    y, sr = librosa.load(filepath, sr=44100, mono=True)
+def analyze_song(filepath, target_sr=44100):
+    results = {}
 
-    # Módulos de análisis
-    bands = analyze_bands(filepath)
-    dynamics = analyze_dynamics(filepath)
-    noise_str = analyze_noise(y, sr)
-    vocals, sr_vocals = separate_audio(filepath)
-    tuning_str = check_tune(vocals, sr_vocals)
-
-    # Parsear resultado de ruido
     try:
-        noise_ratio = float(noise_str.split()[2])
-    except:
-        noise_ratio = np.nan
+        y, sr = librosa.load(filepath, sr=target_sr, mono=True)
+    except Exception as e:
+        return {
+            'error': f"Error loading audio: {e}",
+            'frequency_bands': None,
+            'dynamics': None,
+            'noise_ratio': np.nan,
+            'tuning': {'pitch': None, 'confidence': np.nan}
+        }
 
-    # Parsear resultado de afinación
+    # Frecuencias
     try:
-        tuning_conf = float(tuning_str.split("Confidence: ")[-1])
-    except:
-        tuning_conf = np.nan
+        results['frequency_bands'] = analyze_bands(y, sr)
+    except Exception as e:
+        results['frequency_bands'] = None
 
-    # Consolidar y devolver
-    return {
-        **bands,
-        **dynamics,
-        "noise_ratio": round(noise_ratio, 4),
-        "tuning_conf": round(tuning_conf, 4)
-    }
+    # Dinámica
+    try:
+        results['dynamics'] = analyze_dynamics(y, sr)
+    except Exception as e:
+        results['dynamics'] = None
+
+    # Ruido
+    try:
+        results['noise_ratio'] = calculate_noise_ratio(y, sr)
+    except Exception as e:
+        results['noise_ratio'] = np.nan
+
+    # Afinación vocal
+    try:
+        vocals, sr_vocals = separate_audio(y, sr)
+        tuning_results = check_tune(vocals, sr_vocals)
+
+        if isinstance(tuning_results, dict):
+            results['tuning'] = tuning_results
+        else:
+            try:
+                results['tuning'] = {
+                    'pitch': tuning_results.split("Note: ")[1].split(",")[0],
+                    'confidence': float(tuning_results.split("Confidence: ")[1])
+                }
+            except:
+                results['tuning'] = {'pitch': None, 'confidence': np.nan}
+    except Exception as e:
+        results['tuning'] = {'pitch': None, 'confidence': np.nan}
+
+    results['error'] = None
+    return results

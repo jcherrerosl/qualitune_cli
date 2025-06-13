@@ -1,4 +1,9 @@
 .PHONY: audit feed rate run
+ 
+install:
+	@echo "Installing dependencies..."
+	@pip install -r requirements.txt
+	@echo "Dependencies installed successfully."
 
 feed:
 	@python generate_csv_from_playlist.py
@@ -12,7 +17,9 @@ rate:
 
 run:
 	@echo "Launching Qualitune..."
-	@streamlit run app.py
+	@./venv/bin/streamlit run app.py
+	@echo "Qualitune is running. Open your browser to view the app."
+	
 
 venv:
 	@echo "Creating virtual environment..."

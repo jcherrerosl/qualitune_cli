@@ -1,17 +1,13 @@
 import librosa
 import numpy as np
 
-def analyze_bands(filepath):
+def analyze_bands(y, sr):
     try:
-        y, sr = librosa.load(filepath, sr=44100, mono=True)
-
         def band_energy(y, sr, fmin, fmax):
             S = np.abs(librosa.stft(y))
             freqs = librosa.fft_frequencies(sr=sr)
             band = np.logical_and(freqs >= fmin, freqs <= fmax)
-            if not np.any(band):
-                return 0
-            return np.mean(S[band, :])
+            return np.mean(S[band, :]) if np.any(band) else 0
 
         sub_bass = band_energy(y, sr, 20, 60)
         bass = band_energy(y, sr, 60, 120)
